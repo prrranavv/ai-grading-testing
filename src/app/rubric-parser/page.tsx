@@ -147,8 +147,8 @@ export default function RubricParserPage() {
     selectedForCompare[0] !== null && selectedForCompare[1] !== null;
 
   return (
-    <div className="flex min-h-screen items-start justify-center bg-background p-8">
-      <Card className="w-full max-w-4xl">
+    <div className="p-6">
+      <Card className="w-full">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>

@@ -13,10 +13,10 @@ export function AppSidebar() {
 
   return (
     <nav className="flex w-56 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground">
-      <div className="flex h-14 items-center border-b px-4">
+      <div className="flex h-14 items-center border-b px-5">
         <span className="text-sm font-semibold">AI Grading</span>
       </div>
-      <div className="flex flex-col gap-1 p-2">
+      <div className="flex flex-col gap-1 p-3">
         {navItems.map((item) => {
           const active = pathname.startsWith(item.href);
           return (

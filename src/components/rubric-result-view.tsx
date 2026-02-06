@@ -77,11 +77,11 @@ export function RubricResultView({ result }: { result: RubricResult }) {
           </div>
 
           {/* Rubric table: criteria (rows) × score levels (columns) */}
-          <div className="overflow-auto rounded-lg border">
-            <Table>
+          <div className="rounded-lg border">
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[160px]">Criterion</TableHead>
+                  <TableHead className="w-[20%]">Criterion</TableHead>
                   {getColumnHeaders(result.rubricTable).map((col) => (
                     <TableHead key={col}>{col}</TableHead>
                   ))}
@@ -105,7 +105,7 @@ export function RubricResultView({ result }: { result: RubricResult }) {
                                 <Badge variant="secondary" className="mb-1">
                                   {level.maxScore}
                                 </Badge>
-                                <p className="text-muted-foreground text-xs mt-1">
+                                <p className="text-muted-foreground text-xs mt-1 break-words">
                                   {level.basisForEvaluation}
                                 </p>
                               </div>
