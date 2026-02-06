@@ -76,21 +76,25 @@ export function RubricResultView({ result }: { result: RubricResult }) {
             ))}
           </div>
 
-          {/* Rubric table: criteria (rows) × score levels (columns) */}
+          {/* Rubric table: criteria (rows) x score levels (columns) */}
           <div className="rounded-lg border">
             <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[20%]">Criterion</TableHead>
+                  <TableHead className="w-[18%] whitespace-normal">
+                    Criterion
+                  </TableHead>
                   {getColumnHeaders(result.rubricTable).map((col) => (
-                    <TableHead key={col}>{col}</TableHead>
+                    <TableHead key={col} className="whitespace-normal text-center">
+                      {col}
+                    </TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {result.rubricTable.map((criterion, i) => (
                   <TableRow key={i}>
-                    <TableCell className="font-medium align-top">
+                    <TableCell className="whitespace-normal font-medium align-top py-3">
                       {criterion.criterionName}
                     </TableCell>
                     {criterion.levels.length > 0 ? (
@@ -99,16 +103,14 @@ export function RubricResultView({ result }: { result: RubricResult }) {
                           (l) => (l.columnName ?? "") === col
                         );
                         return (
-                          <TableCell key={col} className="align-top">
+                          <TableCell
+                            key={col}
+                            className="whitespace-normal align-top py-3"
+                          >
                             {level ? (
-                              <div>
-                                <Badge variant="secondary" className="mb-1">
-                                  {level.maxScore}
-                                </Badge>
-                                <p className="text-muted-foreground text-xs mt-1 break-words">
-                                  {level.basisForEvaluation}
-                                </p>
-                              </div>
+                              <p className="text-muted-foreground text-xs leading-relaxed">
+                                {level.basisForEvaluation}
+                              </p>
                             ) : (
                               <span className="text-muted-foreground">—</span>
                             )}
@@ -118,7 +120,7 @@ export function RubricResultView({ result }: { result: RubricResult }) {
                     ) : (
                       <TableCell
                         colSpan={getColumnHeaders(result.rubricTable!).length}
-                        className="text-muted-foreground italic"
+                        className="whitespace-normal text-muted-foreground italic"
                       >
                         No scoring levels extracted
                       </TableCell>

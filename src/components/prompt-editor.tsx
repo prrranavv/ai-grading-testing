@@ -11,6 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { RUBRIC_SYSTEM_PROMPT, RUBRIC_USER_PROMPT } from "@/lib/prompts";
 
 interface PromptEditorProps {
@@ -55,42 +56,55 @@ export function PromptEditor({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="sm:max-w-xl w-full flex flex-col">
-        <SheetHeader>
-          <SheetTitle>Edit Prompts</SheetTitle>
-          <SheetDescription>
-            Customize the system and user prompts sent to the AI model.
-            {" {textContent}"} in the user prompt will be replaced with the
-            document text.
-          </SheetDescription>
-        </SheetHeader>
+      <SheetContent className="sm:max-w-xl w-full flex flex-col gap-0 p-0">
+        <div className="px-6 pt-6 pb-4">
+          <SheetHeader>
+            <SheetTitle>Edit Prompts</SheetTitle>
+            <SheetDescription>
+              Customize the system and user prompts sent to the AI model.
+              <code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">
+                {"{textContent}"}
+              </code>
+              in the user prompt will be replaced with the document text.
+            </SheetDescription>
+          </SheetHeader>
+        </div>
 
-        <Tabs defaultValue="system" className="flex-1 flex flex-col min-h-0">
-          <TabsList className="w-full">
-            <TabsTrigger value="system" className="flex-1">
-              System Prompt
-            </TabsTrigger>
-            <TabsTrigger value="user" className="flex-1">
-              User Prompt
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="system" className="flex-1 min-h-0">
-            <Textarea
-              value={localSystem}
-              onChange={(e) => setLocalSystem(e.target.value)}
-              className="h-full min-h-[400px] resize-none font-mono text-xs"
-            />
-          </TabsContent>
-          <TabsContent value="user" className="flex-1 min-h-0">
-            <Textarea
-              value={localUser}
-              onChange={(e) => setLocalUser(e.target.value)}
-              className="h-full min-h-[400px] resize-none font-mono text-xs"
-            />
-          </TabsContent>
-        </Tabs>
+        <Separator />
 
-        <div className="flex items-center justify-between pt-4 border-t">
+        <div className="flex-1 flex flex-col min-h-0 px-6 pt-4 pb-0">
+          <Tabs
+            defaultValue="system"
+            className="flex-1 flex flex-col min-h-0"
+          >
+            <TabsList className="w-full">
+              <TabsTrigger value="system" className="flex-1">
+                System Prompt
+              </TabsTrigger>
+              <TabsTrigger value="user" className="flex-1">
+                User Prompt
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="system" className="flex-1 min-h-0 mt-3">
+              <Textarea
+                value={localSystem}
+                onChange={(e) => setLocalSystem(e.target.value)}
+                className="h-full min-h-[400px] resize-none font-mono text-xs leading-relaxed p-4 rounded-lg border"
+              />
+            </TabsContent>
+            <TabsContent value="user" className="flex-1 min-h-0 mt-3">
+              <Textarea
+                value={localUser}
+                onChange={(e) => setLocalUser(e.target.value)}
+                className="h-full min-h-[400px] resize-none font-mono text-xs leading-relaxed p-4 rounded-lg border"
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center justify-between px-6 py-4">
           <Button
             variant="ghost"
             size="sm"
@@ -100,7 +114,11 @@ export function PromptEditor({
             Reset to Defaults
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
             <Button size="sm" onClick={handleSave}>
