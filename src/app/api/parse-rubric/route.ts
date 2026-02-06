@@ -13,7 +13,8 @@ export async function POST(req: NextRequest) {
     let customSystemPrompt: string | null = null;
     let customUserPrompt: string | null = null;
     let textContent: string | null = null;
-    let pdfBase64: string | null = null;
+    let fileBase64: string | null = null;
+    let fileMimeType: string | null = null;
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
@@ -24,7 +25,8 @@ export async function POST(req: NextRequest) {
 
       if (file && file.size > 0) {
         const buffer = Buffer.from(await file.arrayBuffer());
-        pdfBase64 = buffer.toString("base64");
+        fileBase64 = buffer.toString("base64");
+        fileMimeType = file.type || "application/octet-stream";
       } else if (pastedText && pastedText.trim().length > 0) {
         textContent = pastedText.trim();
       } else {
@@ -47,24 +49,24 @@ export async function POST(req: NextRequest) {
     const systemPrompt = customSystemPrompt?.trim() || RUBRIC_SYSTEM_PROMPT;
     const userPromptTemplate = customUserPrompt?.trim() || RUBRIC_USER_PROMPT;
 
-    // Build the user message — multimodal for PDFs, plain text otherwise
+    // Build the user message — multimodal for files, plain text otherwise
     type ContentPart =
       | { type: "text"; text: string }
       | { type: "image_url"; image_url: { url: string } };
 
     let userContent: string | ContentPart[];
 
-    if (pdfBase64) {
+    if (fileBase64 && fileMimeType) {
       const userText = userPromptTemplate.replace(
         "{textContent}",
-        "[See attached PDF document]"
+        "[See attached document]"
       );
       userContent = [
         { type: "text", text: userText },
         {
           type: "image_url",
           image_url: {
-            url: `data:application/pdf;base64,${pdfBase64}`,
+            url: `data:${fileMimeType};base64,${fileBase64}`,
           },
         },
       ];

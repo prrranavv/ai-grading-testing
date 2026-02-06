@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useRef, type DragEvent, type ChangeEvent } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  type DragEvent,
+  type ChangeEvent,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,7 +18,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Settings2, History } from "lucide-react";
+import { Settings2, History, Image, FileText, File as FileIcon, X } from "lucide-react";
 import { RUBRIC_SYSTEM_PROMPT, RUBRIC_USER_PROMPT } from "@/lib/prompts";
 import { RubricResultView } from "@/components/rubric-result-view";
 import { PromptEditor } from "@/components/prompt-editor";
@@ -21,14 +27,32 @@ import { RunComparison } from "@/components/run-comparison";
 import { useRunHistory, useRunHistoryDispatch } from "@/lib/run-history-context";
 import type { RubricResult } from "@/lib/types";
 
+const SUPPORTED_TYPES = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+];
+
+function getFileIcon(type: string) {
+  if (type.startsWith("image/")) return Image;
+  if (type === "application/pdf") return FileText;
+  return FileIcon;
+}
+
 export default function RubricParserPage() {
   const [file, setFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [result, setResult] = useState<RubricResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   // Prompt state
   const [systemPrompt, setSystemPrompt] = useState(RUBRIC_SYSTEM_PROMPT);
@@ -45,13 +69,30 @@ export default function RubricParserPage() {
     systemPrompt === RUBRIC_SYSTEM_PROMPT && userPrompt === RUBRIC_USER_PROMPT;
 
   function handleFile(f: File) {
-    if (f.type !== "application/pdf") {
-      setError("Only PDF files are supported.");
+    if (!SUPPORTED_TYPES.includes(f.type)) {
+      setError(
+        `Unsupported file type: ${f.type || "unknown"}. Supported: PDF, PNG, JPEG, GIF, WebP.`
+      );
       return;
     }
     setFile(f);
     setText("");
     setError(null);
+
+    // Generate preview for images
+    if (f.type.startsWith("image/")) {
+      const url = URL.createObjectURL(f);
+      setImagePreview(url);
+    } else {
+      setImagePreview(null);
+    }
+  }
+
+  function clearFile() {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function onDrop(e: DragEvent<HTMLDivElement>) {
@@ -65,6 +106,27 @@ export default function RubricParserPage() {
     const f = e.target.files?.[0];
     if (f) handleFile(f);
   }
+
+  // Cmd+V / Ctrl+V paste handler for images
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          e.preventDefault();
+          const blob = item.getAsFile();
+          if (blob) handleFile(blob);
+          return;
+        }
+      }
+    }
+
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function parseRubric() {
     setLoading(true);
@@ -146,6 +208,8 @@ export default function RubricParserPage() {
   const canCompare =
     selectedForCompare[0] !== null && selectedForCompare[1] !== null;
 
+  const Icon = file ? getFileIcon(file.type) : null;
+
   return (
     <div className="p-6">
       <Card className="w-full">
@@ -154,8 +218,11 @@ export default function RubricParserPage() {
             <div>
               <CardTitle className="text-2xl">Rubric Parser</CardTitle>
               <CardDescription>
-                Upload a PDF rubric or paste rubric text to extract structured
-                data via Gemini.
+                Upload a file (PDF, image), paste an image with{" "}
+                <kbd className="rounded border bg-muted px-1 py-0.5 text-[10px] font-mono">
+                  Cmd+V
+                </kbd>
+                , or paste rubric text to extract structured data via Gemini.
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -192,45 +259,65 @@ export default function RubricParserPage() {
         <CardContent className="space-y-6">
           {/* File upload */}
           <div className="space-y-2">
-            <Label>Upload PDF</Label>
+            <Label>Upload file</Label>
             <div
+              ref={dropZoneRef}
               onDragOver={(e) => {
                 e.preventDefault();
                 setDragOver(true);
               }}
               onDragLeave={() => setDragOver(false)}
               onDrop={onDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
+              onClick={() => !file && fileInputRef.current?.click()}
+              className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${
                 dragOver
                   ? "border-primary bg-primary/5"
-                  : "border-muted-foreground/25 hover:border-muted-foreground/50"
+                  : file
+                    ? "border-border"
+                    : "border-muted-foreground/25 hover:border-muted-foreground/50"
               }`}
             >
               {file ? (
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{file.name}</Badge>
+                <div className="flex w-full items-center gap-3">
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="h-20 w-20 rounded-md object-cover border"
+                    />
+                  ) : (
+                    Icon && (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-muted">
+                        <Icon className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{file.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    className="text-xs text-muted-foreground hover:text-foreground"
+                    className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setFile(null);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
+                      clearFile();
                     }}
                   >
-                    Remove
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Drag & drop a PDF here, or click to browse
+                  Drag & drop a file here, click to browse, or paste an image
                 </p>
               )}
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="application/pdf"
+                accept={SUPPORTED_TYPES.join(",")}
                 className="hidden"
                 onChange={onFileChange}
               />
@@ -255,8 +342,7 @@ export default function RubricParserPage() {
               onChange={(e) => {
                 setText(e.target.value);
                 if (e.target.value.trim()) {
-                  setFile(null);
-                  if (fileInputRef.current) fileInputRef.current.value = "";
+                  clearFile();
                 }
               }}
             />
