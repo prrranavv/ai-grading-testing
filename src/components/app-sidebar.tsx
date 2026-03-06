@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText } from "lucide-react";
+import { FileText, Library, MapPinned } from "lucide-react";
 
 const navItems = [
   { label: "Rubric Parser", href: "/rubric-parser", icon: FileText },
+  { label: "State Rubrics", href: "/state-rubrics", icon: MapPinned },
+  { label: "Wayground Library", href: "/wayground-rubrics", icon: Library },
 ];
 
 export function AppSidebar() {

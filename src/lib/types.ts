@@ -17,6 +17,25 @@ export interface RubricResult {
   raw?: string;
 }
 
+export interface StateRubricLevel {
+  basisForEvaluation: string;
+  columnName?: string;
+  maxScore: number;
+}
+
+export type StateRubricTable = Record<string, StateRubricLevel[]>;
+
+export interface StateRubricResult {
+  name?: string;
+  state?: string[];
+  country?: string[];
+  src?: string;
+  subject?: string[];
+  grade?: string[];
+  rubricTable?: StateRubricTable;
+  raw?: string;
+}
+
 export interface RunRecord {
   id: string;
   timestamp: number;

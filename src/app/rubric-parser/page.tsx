@@ -7,6 +7,7 @@ import {
   type DragEvent,
   type ChangeEvent,
 } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,7 +19,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Settings2, History, Image, FileText, File as FileIcon, X } from "lucide-react";
+import {
+  Settings2,
+  History,
+  Image as ImageIcon,
+  FileText,
+  File as FileIcon,
+  X,
+} from "lucide-react";
 import { RUBRIC_SYSTEM_PROMPT, RUBRIC_USER_PROMPT } from "@/lib/prompts";
 import { RubricResultView } from "@/components/rubric-result-view";
 import { PromptEditor } from "@/components/prompt-editor";
@@ -38,7 +46,7 @@ const SUPPORTED_TYPES = [
 ];
 
 function getFileIcon(type: string) {
-  if (type.startsWith("image/")) return Image;
+  if (type.startsWith("image/")) return ImageIcon;
   if (type === "application/pdf") return FileText;
   return FileIcon;
 }
@@ -125,7 +133,6 @@ export default function RubricParserPage() {
 
     document.addEventListener("paste", onPaste);
     return () => document.removeEventListener("paste", onPaste);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function parseRubric() {
@@ -212,7 +219,7 @@ export default function RubricParserPage() {
 
   return (
     <div className="p-6">
-      <Card className="w-full">
+      <Card className="mx-auto w-full max-w-[1600px]">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -280,9 +287,11 @@ export default function RubricParserPage() {
               {file ? (
                 <div className="flex w-full items-center gap-3">
                   {imagePreview ? (
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="Preview"
+                      width={80}
+                      height={80}
                       className="h-20 w-20 rounded-md object-cover border"
                     />
                   ) : (
@@ -390,7 +399,15 @@ export default function RubricParserPage() {
           )}
 
           {/* Result */}
-          {result && <RubricResultView result={result} />}
+          {result && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Review parsed rubric details first, then inspect criterion scores in
+                table format.
+              </p>
+              <RubricResultView result={result} />
+            </div>
+          )}
         </CardContent>
       </Card>
 

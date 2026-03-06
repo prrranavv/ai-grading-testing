@@ -72,3 +72,46 @@ export const RUBRIC_USER_PROMPT = `## Document to Analyze:
 {textContent}
 
 Extract the rubric information from the above document/image and return valid JSON matching the schema.`;
+
+export const STATE_RUBRIC_SYSTEM_PROMPT = `You are an expert rubric parser for state rubrics.
+
+Your task is to extract rubric content from the provided PDF/image/text into a strict JSON object.
+
+Return ONLY valid JSON, no markdown, no explanation.
+
+Schema:
+{
+  "name": string,                     // required
+  "state": string[],                  // optional, e.g. ["CA", "TX"]
+  "country": string[],                // optional, e.g. ["US"]
+  "src": string,                      // optional, leave as "" unless explicitly present
+  "subject": string[],                // optional, values only from: English, Science, Social Studies
+  "grade": string[],                  // optional
+  "rubricTable": {                    // required
+    "<criterionName>": [
+      {
+        "basisForEvaluation": string, // required
+        "columnName": string,         // optional
+        "maxScore": number            // required
+      }
+    ]
+  }
+}
+
+Rules:
+- Only "name" and "rubricTable" are mandatory.
+- Name must be user-facing (for example: "Virginia SOL Grade 5 Instructional Rubric") if present in the source.
+- Subject can only contain: English, Science, Social Studies.
+- "columnName" is optional.
+- Parse strictly from provided content. Do NOT add, infer, or hallucinate anything.
+- If a field is not clearly present, omit it (except "src", which should be empty string if not present).
+- Keep wording faithful to source text.
+- If no rubric structure is found, return:
+  {
+    "name": "<best available title or fallback short label>",
+    "rubricTable": {}
+  }`;
+
+export const STATE_RUBRIC_USER_PROMPT = `Analyze the following rubric content and return JSON using the required schema:
+
+{textContent}`;

@@ -13,14 +13,22 @@ import {
 } from "@/components/ui/table";
 import type { RubricResult, RubricCriterion } from "@/lib/types";
 
-function getColumnHeaders(rubricTable: RubricCriterion[]): string[] {
-  const cols = new Set<string>();
+interface ColumnHeader {
+  name: string;
+  maxScore: number | null;
+}
+
+function getColumnHeaders(rubricTable: RubricCriterion[]): ColumnHeader[] {
+  const cols = new Map<string, number | null>();
   for (const criterion of rubricTable) {
     for (const level of criterion.levels) {
-      cols.add(level.columnName ?? "");
+      const name = level.columnName ?? "";
+      if (!cols.has(name)) {
+        cols.set(name, level.maxScore);
+      }
     }
   }
-  return Array.from(cols);
+  return Array.from(cols, ([name, maxScore]) => ({ name, maxScore }));
 }
 
 export function RubricResultView({ result }: { result: RubricResult }) {
@@ -59,21 +67,22 @@ export function RubricResultView({ result }: { result: RubricResult }) {
 
       {viewMode === "table" && result.rubricTable ? (
         <div className="space-y-3">
-          {/* Rubric name and metadata */}
-          {result.name && (
-            <p className="text-sm font-semibold">{result.name}</p>
-          )}
-          <div className="flex flex-wrap gap-2">
-            {result.subject?.map((s) => (
-              <Badge key={s} variant="secondary">
-                {s}
-              </Badge>
-            ))}
-            {result.grade?.map((g) => (
-              <Badge key={g} variant="outline">
-                Grade {g}
-              </Badge>
-            ))}
+          <div className="rounded-lg border bg-muted/20 p-4">
+            <p className="text-lg font-semibold">
+              {result.name?.trim() || "Untitled Rubric"}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {result.subject?.map((s) => (
+                <Badge key={s} variant="secondary">
+                  {s}
+                </Badge>
+              ))}
+              {result.grade?.map((g) => (
+                <Badge key={g} variant="outline">
+                  Grade {g}
+                </Badge>
+              ))}
+            </div>
           </div>
 
           {/* Rubric table: criteria (rows) x score levels (columns) */}
@@ -85,8 +94,13 @@ export function RubricResultView({ result }: { result: RubricResult }) {
                     Criterion
                   </TableHead>
                   {getColumnHeaders(result.rubricTable).map((col) => (
-                    <TableHead key={col} className="whitespace-normal text-center">
-                      {col}
+                    <TableHead key={col.name} className="whitespace-normal text-center">
+                      {col.name}
+                      {col.maxScore !== null && (
+                        <span className="text-muted-foreground font-normal">
+                          {" "}({col.maxScore})
+                        </span>
+                      )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -100,11 +114,11 @@ export function RubricResultView({ result }: { result: RubricResult }) {
                     {criterion.levels.length > 0 ? (
                       getColumnHeaders(result.rubricTable!).map((col) => {
                         const level = criterion.levels.find(
-                          (l) => (l.columnName ?? "") === col
+                          (l) => (l.columnName ?? "") === col.name
                         );
                         return (
                           <TableCell
-                            key={col}
+                            key={col.name}
                             className="whitespace-normal align-top py-3"
                           >
                             {level ? (
