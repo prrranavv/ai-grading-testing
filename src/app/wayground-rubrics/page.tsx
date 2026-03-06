@@ -177,7 +177,7 @@ export default function WaygroundRubricsPage() {
       if (!res.ok) throw new Error(data.error ?? "Failed to fetch rubric list");
 
       const summaries = extractArray(data)
-        .map((item) => {
+        .map((item): RubricSummary | null => {
           const id = getRubricId(item);
           if (!id) return null;
           return {
